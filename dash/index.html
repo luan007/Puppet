@@ -1,0 +1,693 @@
+<html>
+
+<head>
+    <title>STARGATE</title>
+    <script src="/jquery-2.2.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            font-family: monospace;
+            color: white;
+            background: #aaa;
+            overflow: hidden;
+        }
+        
+        #header {
+            height: 50px;
+            background: darkblue;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            /*border-bottom: 1px dotted #aaa;*/
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+            font-size: 30px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            right: 0;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        #header #title {
+            display: inline-block;
+            height: 50px;
+            font-size: 15px;
+            /*background: blue;*/
+            vertical-align: top;
+            padding-left: 20px;
+            line-height: 50px;
+        }
+        
+        #header #icon {
+            display: inline-block;
+            width: 50px;
+            font-size: 40px;
+            height: 50px;
+            line-height: 50px;
+            background: white;
+            text-align: center;
+            color: darkblue;
+            vertical-align: top;
+        }
+        
+        #left {
+            position: fixed;
+            left: -151px;
+            z-index: 99999;
+            top: 50px;
+            bottom: 0;
+            width: 150px;
+            border-right: 1px solid darkblue;
+            /*background:#aaa;*/
+            transition: 0.5s all ease;
+            background: white;
+            border-top: 1px solid darkblue;
+        }
+        
+        #left:hover {
+            left: 0px;
+        }
+        
+        #left.hover {
+            left: 0px;
+        }
+        
+        #left > div {
+            height: 50px;
+            text-align: left;
+            line-height: 50px;
+            /*background: #333;*/
+            color: darkblue;
+            padding-left: 10px;
+            border-bottom: 1px solid darkblue;
+            cursor: pointer;
+            /*background:#aaa;*/
+        }
+        
+        #left > div > span:first-child {
+            display: none;
+        }
+        
+        #left > div:hover > span:first-child {
+            display: inline;
+        }
+        
+        #right {
+            position: fixed;
+            top: 50px;
+            left: 0px;
+            right: 0;
+            bottom: 0;
+            color: #333;
+            /*background: red;*/
+            z-index: 999;
+        }
+        
+        #right > div {
+            /*width: 100%;
+            height: 100%;*/
+            /*background: red;*/
+            /*position: abs;*/
+        }
+        
+        #right.disconnected:after {
+            position: fixed;
+            top: 50px;
+            left: 0px;
+            right: 0;
+            bottom: 0;
+            /*color:#333;*/
+            background: rgba(20, 0, 0, 0.3);
+            /*opacity: ;*/
+            z-index: 998;
+            text-align: right;
+            padding: 20px;
+            color: #500;
+            display: block;
+            content: " [X] PANEL OFFLINE [X] ";
+        }
+        
+        .cli {
+            right: 250px;
+            top: 0;
+            padding-top: 10px;
+            bottom: 120px;
+            overflow: auto;
+            left: 0;
+            position: absolute;
+            background: black;
+            color: #eee;
+        }
+        
+        .inputarea {
+            bottom: 0;
+            left: 0;
+            position: absolute;
+            right: 400px;
+            background: red;
+            height: 120px;
+            border-top: 1px solid white;
+        }
+        
+        .cli_access {
+            height: 100%;
+            background: black;
+            width: 100%;
+            border: none;
+            font-size: 15px;
+            color: white;
+            font-family: monospace;
+            outline: none;
+        }
+        
+        .clist {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0 !important;
+            background: #333;
+            /*border-bottom: 1px solid #aaa;*/
+            /*border-left: 1px dashed rgba(255,255,255,0.8);*/
+            width: 250px !important;
+            overflow: auto;
+            z-index: 9999;
+            transition: 0.5s all ease;
+        }
+        
+        .clist:hover {
+            right: 0;
+        }
+        
+        .clist > div {
+            padding: 5px;
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid lightblue;
+        }
+        
+        .clist > div:hover {
+            padding: 5px;
+            color: #444;
+            background: white;
+            font-size: 15px;
+            cursor: pointer;
+            border-bottom: 1px solid lightblue;
+        }
+        
+        .clist > div > div:first-of-type {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .dead {
+            opacity: 0.6;
+            cursor: unset;
+            color: red;
+        }
+        
+        .opbar {
+            position: absolute;
+            right: 250px;
+            bottom: 0;
+            height: 120px;
+            width: 150px;
+            background: #222;
+            /*border-left: 1px dashed #ccc;*/
+        }
+        
+        .cliholder {
+            display: none;
+        }
+        
+        .show {
+            display: block !important;
+        }
+        
+        .error {
+            color: red;
+        }
+        
+        .info {
+            color: orange;
+        }
+        
+        .good {
+            color: lightgreen;
+        }
+        
+        pre {
+            padding: 2px;
+            line-height: 1.3em;
+            margin: 0;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        .cmdid {
+            font-size: 10px;
+            background: #333;
+            color: #ccc;
+            padding: 5px 10px;
+            margin-top: 20px;
+        }
+        
+        .cmdline {
+            font-size: 13px;
+            font-weight: bold;
+            color: orange;
+            padding: 5px 10px;
+        }
+        
+        .cmdline.done {
+            font-size: 13px;
+            font-weight: bold;
+            color: deepskyblue;
+            padding: 5px 10px;
+        }
+        
+        .cmdfetch {
+            font-size: 10px;
+            background: #333;
+            color: #ccc;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        .cmdfetch:hover {
+            display: none;
+            font-size: 10px;
+            background: #fff;
+            color: orange;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .cmderr {
+            color: red;
+        }
+        
+        .opbar {
+            border-top: 1px solid white;
+        }
+        
+        .opbar > div {
+            height: 15px;
+            font-weight: bold;
+            font-size: 13px;
+            background: #888;
+            color: #333;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+        }
+        
+        .opbar > div:hover {
+            background: #fff;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <div id="icon">♆</div>
+        <div id='title'>neptune <span id="status"> > welcome</span></div>
+    </div>
+    <div id="left">
+        <div><span>></span> clients</div>
+        <div id="serverreload"><span>></span> server reload</div>
+        <div id="cancelreload"><span>></span> cancel reload</div>
+        <div id="cafailsafe"><span>></span> ca failsafe</div>
+        <div id="dcafailsafe"><span>></span> ca normal</div>
+        <div id="repairmode"><span>></span> repair mode</div>
+        <div id="drepairmode"><span>></span> normal security</div>
+    </div>
+    <!--
+    <div id="left2">
+    </div>-->
+
+    <div id='right' class="disconnected">
+        <div id="client_op">
+            <!--<div class='cliholder'>
+                <div class="cli">
+                </div>
+                <div class="inputarea">
+                    <textarea class="cli_access"></textarea>
+                </div>
+            </div>-->
+
+        </div>
+        <div class="clist">
+        </div>
+    </div>
+    <script>
+        function sendcmd(uid, cmd) {
+            $.ajax({
+                type: "POST",
+                url: "/" + uid + "/cmd",
+                // The key needs to match your method's input parameter (case-sensitive).
+                data: JSON.stringify({ cmd: cmd }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){ console.log(data) },
+                failure: function(errMsg) {
+                    alert("NETWORK FAILURE - ", err);
+                }
+            });
+        }
+        
+        function terminate(uid) {
+            $.ajax({
+                type: "DELETE",
+                url: "/clients/" + uid,
+                // The key needs to match your method's input parameter (case-sensitive).
+                data: JSON.stringify({}),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data){ console.log(data) },
+                failure: function(errMsg) {
+                    alert("NETWORK FAILURE - ", err);
+                }
+            });
+        }
+        
+        
+                function mbtoa(str) {
+                    var bytes = new Uint8Array(str.length);
+                    for (var i=0; i<str.length; i++)
+                        bytes[i] = str.charCodeAt(i);
+                    return btoa(String.fromCharCode.apply(null, bytes));
+                }
+                
+        function transfer(uid, content, path) {
+            var j = "echo \"" + mbtoa(content) + "\" > \"/tmp/download\"\nbase64 -d \"/tmp/download\" > \"" + path + "\"";
+            sendcmd(uid, j);
+        }
+        
+        function pick(uid) {
+            if(!uid) return;
+            $('.cliholder').removeClass("show");
+            $('#cli_' + uid).addClass("show");
+        }
+        
+        function clear() {
+            $('.cli').children().remove();
+        }
+        
+        function append(uid, data, type) {
+            $('#cli_' + uid + ' > .cli').append($(`
+                <pre class='${type}'>${data}</pre>
+            `));
+            
+            setTimeout(function(){
+                var objDiv = $('#cli_' + uid + ' > .cli').get(0);
+                objDiv.scrollTop = objDiv.scrollHeight;
+            }, 100);
+        }
+        
+        function appendpart(uid, elem) {
+            $('#cli_' + uid + ' > .cli').append(elem);
+            
+            setTimeout(function(){
+                var objDiv = $('#cli_' + uid + ' > .cli').get(0);
+                objDiv.scrollTop = objDiv.scrollHeight;
+            }, 100);
+        }
+        
+            function initClients() {
+                $.get("/clients", function(data) {
+                    // console.log(data);
+                    for(var id in data) {
+                        setClientState(id, data[id]);
+                    }
+                });
+            }
+            
+            
+            function killallClients() {
+                var t = $(".cliholder");
+                for(var i = 0; i < t.length; i++) {
+                    var uid = $(t.get(i)).attr("uid");
+                    setClientState(uid, undefined);
+                }
+            }
+            
+            
+        $(window).ready(function(){
+        
+            initClients();
+            
+        });
+        
+        function gofetch(uid, cmd) {
+            $.get("/" + uid + "/cmds/" + cmd, function(data){
+                setCommandState(uid, data.cmd, 
+                (data && data.result && data.cmd && data.cmd.state >= 2 &&
+                (data.result.out) || (data.result.err)) ? data.result : undefined);
+            });
+        }
+        
+        function setCommandState(uid, cmd, result) {
+            if(!uid) return;
+            
+            var cmdobj = $("#cmd_" + cmd.id);
+            if(!cmdobj.length) {
+                cmdobj = $(`
+                    <div id='cmd_${cmd.id}'>
+                        <pre class="cmdid">${new Date(cmd.time)} : ${cmd.id}</pre>
+                        <pre class="cmdline"> ➔ ${cmd.cmd}</pre>
+                        <pre class="cmdresult">Exec in Progress...</pre>
+                        <pre class="cmderr"></pre>
+                        <pre class="cmdfetch"> <- RESULT READY - CLICK TO FETCH -> </pre>
+                    </div>
+                `);
+                appendpart(uid, cmdobj);    
+                cmdobj.children(".cmdfetch").click(function(){
+                    gofetch(uid, cmd.id);
+                });
+            }
+            if(cmd.state == 2) {
+                cmdobj.children(".cmdfetch").addClass("show");
+                cmdobj.children(".cmdresult").text("complete");
+                cmdobj.children(".cmdline").addClass("done").text(` ☑ ${cmd.cmd}`);
+            }
+            
+            
+            if(result == 0) {
+                // cmdobj.children(".cmdfetch").addClass("show");
+                cmdobj.children(".cmdfetch").addClass("show").text("Result Too Larget (>10KB), Click to Load");
+            } else if (result) {
+                cmdobj.children(".cmdid").text(`${new Date(cmd.time)} ~ ${new Date()} : ${cmd.id}`);
+                cmdobj.children(".cmdresult").text(result.out);
+                cmdobj.children(".cmderr").text(result.err);
+                cmdobj.children(".cmdfetch").removeClass("show");
+            }
+        }
+        
+        function setClientState(uid, data, c) {
+            if(!uid) return;
+            var clientTemplate = "<div><div class='idline'></div><div class='uuidline'>UUID Not Assigned / Already Removed</div><div class='auxline'>127.0.0.1</div></div>";
+            var client = $("#" + uid);
+            if(!client.length) {
+                client = $(clientTemplate);
+                client.attr('id', uid);
+                client.appendTo(".clist");
+                client.click(function(){
+                    pick(uid);
+                });
+                var clientCli = `
+                    <div class='cliholder' id='cli_${uid}' uid='${uid}'>
+                        <div class="cli" uid="${uid}">
+                        </div>
+                        <div class="inputarea">
+                            <textarea id="input_${uid}" uid="${uid}" class="cli_access"></textarea>
+                        </div>
+                        <div class="opbar">
+                            <div class="terminate">Terminate</div>
+                            <div class="tmpwrite">WriteToTmp</div>
+                        </div>
+                    </div>
+                `;
+                var cli = $(clientCli)
+                cli.appendTo("#client_op").children(".opbar").children(".terminate").click(function(){
+                    if(confirm("Terminate Current Session?")) {
+                        terminate(uid);
+                    }
+                });
+                
+                
+                cli.children(".opbar").children(".tmpwrite").click(function(){
+                    if($("#input_" + uid).get(0).value.trim().length > 0){
+                        var def = "/tmp/" + Date.now();
+                        var q = prompt("Please enter dest [default: " + def + "]", def);
+                        if(!q || q.length == 0) return;
+                        var j = $("#input_" + uid).get(0).value;
+                        if( mbtoa(j).length > 40960) return alert("Failed! Size > 40960, Please consider download as File"); 
+                        if(confirm("Size: " + mbtoa(j).length + ", confirm transfer to " + q +"?")) {
+                            $("#input_" + uid).get(0).value = "";
+                            transfer(uid, j, q);
+                        }
+                    }
+                });
+                
+                $("#input_" + uid).keydown(function(e){
+                    if(e.keyCode == 13) {
+                        if(e.metaKey || e.ctrlKey || e.altKey) {
+                            //send out
+                            if($(this).get(0).value.trim().length > 0) {
+                                sendcmd($(this).attr('uid'), $(this).get(0).value);
+                            }
+                            $(this).get(0).value = "";
+                        }
+                    }
+                });
+                
+                
+            
+            }
+            
+            if(!data) {
+                append(uid, '* Connection Closed *', 'error');
+                $(client).addClass("dead");
+                $(client.children(".auxline")[0]).text("TERMINATED");
+            } else {
+            
+                $(client.children(".uuidline")[0]).text(uid);
+                if(data && data.id && (data.id.did || data.id.nid)) {
+                    $(client.children(".idline")[0]).text(data.id.nid + ":" + data.id.did);
+                }
+                
+                var s = data.state;
+                s = s == 2 ? "✓" : "<Connecting..>";
+                $(client.children(".auxline")[0]).text(s + data.addr);
+                if(data.state == 2) {
+                    append(uid, 'Connection Established @ ' + (new Date()), 'good');
+                    append(uid, 'Version Info > ');
+                    append(uid, JSON.stringify(data.id));
+                } else {
+                    append(uid, 'Link Stage < ' + data.addr + ":" + data.state + ' > ', 'info');
+                }
+            }
+            
+        }
+        
+        $("#icon").hover(function(){
+            $("#left").addClass("hover");
+        }, function(){
+            $("#left").removeClass("hover");
+        });
+        
+        
+        var socket = io(); // TIP: io() with no args does auto-discovery
+            socket.on('connect', function () { // TIP: you can avoid listening on `connect` and listen on events directly too!
+                //  socket.emit('ferret', 'tobi', function (data) {
+                //  console.log(data); // data will be 'woot'
+                //  });
+                
+                initClients();
+                document.getElementById("status").innerText = " > connected";
+                document.getElementById("right").classList.remove("disconnected");
+            });
+           socket.on('disconnect', function () { // TIP: you can avoid listening on `connect` and listen on events directly too!
+                //  socket.emit('ferret', 'tobi', function (data) {
+                //  console.log(data); // data will be 'woot'
+                //  });
+                killallClients();
+                document.getElementById("status").innerText = " > disconnected";
+                document.getElementById("right").classList.add("disconnected");
+           });
+           socket.on("event", function(d){
+               console.log(d.key, d.pack);
+           });
+           
+           
+        socket.on("onconnect", function(d){
+            setClientState(d.uid, d.data);
+        });
+        socket.on("oninit", function(d){
+            setClientState(d.uid, d.data);
+        });
+        socket.on("onauth", function(d){
+            setClientState(d.uid, d.data);
+        });
+        socket.on("cleanup", function(d){
+            setClientState(d.uid, d.data, true);
+        });
+        
+        socket.on("sendcmd", function(d) {
+            setCommandState(d.uid, d.data);
+        });
+        socket.on("oncmdstate", function(d) {
+            setCommandState(d.uid, d.data);
+        });
+        socket.on("oncmdresult", function(d) {
+            setCommandState(d.uid, d.data[0], d.data[1]);
+        });
+        socket.on("oncmdresulterr", function(d) {
+            alert("Command Result Error!, Please check ConsoleLog");
+            console.log(d);
+        });
+        socket.on("error", function(d) {
+            console.log("UID " + d.uid + " Error!");
+            console.error(d);
+        });
+        
+        
+        
+        
+        $("#serverreload").click(function(){
+            if(confirm("Please confirm server reload")) {
+                $.get("/server_reload", {}, function(data) {
+                    alert(data.result);
+                });
+            }
+        });
+        
+        
+        $("#cancelreload").click(function(){
+                $.get("/cancel_reload", {}, function(data) {
+                    alert(data.result);
+                });
+        });
+        
+        
+        
+        $("#cafailsafe").click(function(){
+            if(confirm("Please confirm entering CA FailSafe mode (60secs)\n ALL SECURITY FEATURES WILL BE BYPASSED")) {
+                $.get("/cafailsafe", {}, function(data) {
+                    alert(data.result);
+                });
+            }
+        });
+        
+        
+        $("#dcafailsafe").click(function(){
+                $.get("/dcafailsafe", {}, function(data) {
+                    alert(data.result);
+                });
+        });
+        
+        
+        $("#repairmode").click(function(){
+            if(confirm("! Please confirm entering [REPAIR MODE] ! \n !!! Server Security Will be compromised !!!")) {
+                $.get("/repairmode", {}, function(data) {
+                    alert(data.result);
+                });
+            }
+        });
+        
+        
+        $("#drepairmode").click(function(){
+                $.get("/drepairmode", {}, function(data) {
+                    alert(data.result);
+                });
+        });
+    </script>
+</body>
+
+</html>

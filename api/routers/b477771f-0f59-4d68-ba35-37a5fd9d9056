@@ -1,0 +1,1 @@
+{"ap":{"ssid":"aijie-t2-new2"},"wifidog":{"enabled":1,"inactive_time":100,"domains":["as.test.aijee.cn","p.test.aijee.cn","www.aijee.cn"],"add_domains":["p.shanghai.aijee.cn"],"del_domains":["www.aijee.cn"],"trustedmac":["00:11:22:33:44:55","11:22:33:44:55:66"],"add_trustedmac":["00:11:22:33:44:55"]}}

@@ -1,0 +1,1 @@
+{"wifidog":{"trustedmac":["00:11:22:33:44:55"],"add_trustedmac":["00:11:22:33:44:33"],"remove_trustedmac":["00:11:22:33:44:33"],"del_trustedmac":["00:11:22:33:44:33"],"add_domains":["dummy.org"],"del_domains":["dummy.org"]},"iBeacon":{"uuid":"FDA50693-A4E2-4FB1-AFCF-C6EB07647825"},"ap":{"ssid":"aijee-t5"}}

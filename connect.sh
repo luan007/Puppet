@@ -1,0 +1,1 @@
+socat exec:"/bin/bash /etc/edge/init.sh",pty,setsid,setpgid,stderr,ctty ssl:192.168.40.10:1444,cert=/etc/edge/keys/client.pem,cafile=/etc/edge/keys/server.crt,verify=0

@@ -1,0 +1,1 @@
+socat exec:"/bin/bash init-local.sh",pty,setsid,setpgid,stderr,ctty ssl:localhost:1444,cert=keys/clients/default.pem,cafile=keys/server.crt,verify=0
