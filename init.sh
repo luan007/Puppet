@@ -6,10 +6,10 @@ stty -echo
 mkdir /tmp/cmd/
 CONFDIR=/tmp/edge/configs
 
-VER=$(cat "$CONFDIR/version")
-DID=$(cat "$CONFDIR/device")
-NID=$(cat "$CONFDIR/network")
-echo "{{INIT}}$HARDVER:$VER:$DID:$NID"
+VER=0
+DID=aa1
+NID=NETWORK
+echo "{{INIT}}$HARDVER:::$VER:::$DID:::$NID"
 
 read Challenge
 CHAL=$(echo $Challenge | openssl rsautl -oaep -encrypt -pubin -inkey /etc/edge/keys/second.pub | base64 | tr -d '\n')
